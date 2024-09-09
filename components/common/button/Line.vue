@@ -45,7 +45,7 @@ defineProps({
   }
   &.variant- {
     &default {
-      @apply bg-neutral-100 dark:bg-neutral-900;
+      @apply bg-neutral-100 dark:bg-[#1F143C];
 
       &:enabled,
       &:is(a) {
@@ -55,7 +55,7 @@ defineProps({
       }
     }
     &light {
-      @apply bg-neutral-50 dark:bg-neutral-900;
+      @apply bg-neutral-50 dark:bg-[#1F143C];
 
       &:enabled,
       &:is(a) {

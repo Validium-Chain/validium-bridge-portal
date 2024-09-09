@@ -113,7 +113,7 @@ defineProps({
       }
 
       .line {
-        @apply h-full w-full rounded bg-neutral-600 dark:bg-neutral-700;
+        @apply h-full w-full rounded bg-neutral-600 dark:bg-[#1F143C];
         @media screen and (max-width: 640px) {
           &:nth-child(n + 20) {
             @apply hidden;

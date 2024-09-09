@@ -1,9 +1,9 @@
 html.dark {
-  @apply bg-black;
+  @apply bg-[#180F2D];
 }
 html,
 body {
-  @apply min-h-full text-neutral-950 w-full bg-neutral-50 font-sans antialiased dark:bg-black dark:text-white;
+  @apply min-h-full text-neutral-950 w-full bg-neutral-50 font-sans antialiased dark:bg-[#180F2D] dark:text-white;
   -webkit-text-size-adjust: 100%;
 
   .tippy-box {

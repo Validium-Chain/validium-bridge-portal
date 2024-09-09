@@ -1,1 +1,34 @@
-[]
+[
+  {
+    "network": {
+      "id": 272,
+      "name": "ZKSync Local",
+      "key": "zksync-local",
+      "rpcUrl": "https://bridge.neofi.co:60100",
+      "blockExplorerUrl": "https://bridge.neofi.co/",
+      "blockExplorerApi": "https://bridge.neofi.co:90",
+      "l1Network": {
+        "id": 9,
+        "name": "Eth Local",
+        "nativeCurrency": {
+          "name": "Ether",
+          "symbol": "ETH",
+          "decimals": 18
+        },
+        "rpcUrls": {
+          "default": {
+            "http": [
+              "https://bridge.neofi.co:100"
+            ]
+          },
+          "public": {
+            "http": [
+              "https://bridge.neofi.co:100"
+            ]
+          }
+        }
+      }
+    },
+    "tokens": []
+  }
+]

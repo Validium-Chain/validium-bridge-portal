@@ -9,7 +9,7 @@
       </div>
     </div>
     <div class="inset flex p-[2px]">
-      <div class="h-full w-full rounded-full bg-gray-input dark:bg-neutral-900"></div>
+      <div class="h-full w-full rounded-full bg-gray-input dark:bg-[#1F143C]"></div>
     </div>
   </div>
 </template>
@@ -85,7 +85,7 @@ onBeforeUnmount(() => {
     }
   }
   .inset {
-    @apply absolute left-1/2 top-1/2 aspect-square w-9/12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray dark:bg-neutral-900;
+    @apply absolute left-1/2 top-1/2 aspect-square w-9/12 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray dark:bg-[#1F143C];
   }
 
   @keyframes animateCircle {

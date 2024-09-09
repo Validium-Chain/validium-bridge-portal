@@ -43,7 +43,7 @@ defineProps({
   }
   &.variant- {
     &default {
-      @apply bg-neutral-100 dark:bg-neutral-900;
+      @apply bg-neutral-100 dark:bg-[#1F143C];
       &:enabled,
       &:is(a, label) {
         &:not([aria-disabled="true"]) {
@@ -52,7 +52,7 @@ defineProps({
       }
     }
     &light {
-      @apply bg-neutral-200 transition disabled:opacity-70 dark:bg-neutral-800;
+      @apply bg-neutral-200 transition disabled:opacity-70 dark:bg-[#1F143C];
       &:enabled,
       &:is(a, label) {
         &:not([aria-disabled="true"]) {
@@ -70,7 +70,7 @@ defineProps({
       }
       &:disabled,
       &[aria-disabled="true"] {
-        @apply bg-opacity-50 dark:bg-neutral-800 dark:bg-opacity-50;
+        @apply bg-opacity-50 dark:bg-[#1F143C] dark:bg-opacity-50;
       }
     }
     &error {
