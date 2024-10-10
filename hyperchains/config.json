@@ -1,15 +1,15 @@
 [
   {
     "network": {
-      "id": 272,
-      "name": "ZKSync Local",
-      "key": "zksync-local",
-      "rpcUrl": "https://bridge.neofi.co:60100",
-      "blockExplorerUrl": "https://bridge.neofi.co/",
-      "blockExplorerApi": "https://bridge.neofi.co:90",
+      "id": 271,
+      "name": "Validium",
+      "key": "validium",
+      "rpcUrl": "https://devnet.l2.rpc.validium.network/",
+      "blockExplorerUrl": "https://devnet.explorer.validium.network",
+      "blockExplorerApi": "https://devnet.api.validium.network",
       "l1Network": {
-        "id": 9,
-        "name": "Eth Local",
+        "id": 17000,
+        "name": "Holesky",
         "nativeCurrency": {
           "name": "Ether",
           "symbol": "ETH",
@@ -18,13 +18,19 @@
         "rpcUrls": {
           "default": {
             "http": [
-              "https://bridge.neofi.co:100"
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
             ]
           },
           "public": {
             "http": [
-              "https://bridge.neofi.co:100"
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
             ]
+          }
+        },
+        "blockExplorers": {
+          "default": {
+            "name": "Holesky",
+            "url": "https://holesky.etherscan.io/"
           }
         }
       }
