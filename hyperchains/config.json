@@ -1,7 +1,7 @@
 [
   {
     "network": {
-      "id": 271,
+      "id": 272,
       "name": "Validium",
       "key": "validium",
       "rpcUrl": "https://devnet.l2.rpc.validium.network/",
@@ -17,14 +17,10 @@
         },
         "rpcUrls": {
           "default": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
+            "http": ["https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"]
           },
           "public": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
+            "http": ["https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"]
           }
         },
         "blockExplorers": {
