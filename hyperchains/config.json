@@ -1,7 +1,7 @@
 [
   {
     "network": {
-      "id": 272,
+      "id": 273,
       "name": "Validium",
       "key": "validium",
       "rpcUrl": "https://devnet.l2.rpc.validium.network/",
