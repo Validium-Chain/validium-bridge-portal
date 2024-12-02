@@ -1,22 +1,39 @@
 import { mainnet, sepolia } from "@wagmi/core/chains";
 
 import Hyperchains from "@/hyperchains/config.json";
-import { PUBLIC_L1_CHAINS, type Config } from "@/scripts/hyperchains/common";
+import { type Config } from "@/scripts/hyperchains/common";
 
 import type { Token } from "@/types";
 import type { Chain } from "@wagmi/core/chains";
 
 const portalRuntimeConfig = usePortalRuntimeConfig();
 
+// We don't use RPC tokens here, since the expectation is that public quota is enough to cover all the requests.
+// We provide several RPC URLs to deal with the case when one of them is down.
+// The expectation is that "more reliable" RPCs are listed first.
 export const l1Networks = {
   mainnet: {
     ...mainnet,
     name: "Ethereum",
     network: "mainnet",
+    rpcUrls: {
+      default: {
+        http: ["https://rpc.ankr.com/eth/", "https://ethereum-rpc.publicnode.com", "https://cloudflare-eth.com"],
+      },
+    },
   },
   sepolia: {
     ...sepolia,
     name: "Ethereum Sepolia Testnet",
+    rpcUrls: {
+      default: {
+        http: [
+          "https://rpc.ankr.com/eth_sepolia/",
+          "https://ethereum-sepolia-rpc.publicnode.com",
+          "https://rpc.sepolia.org",
+        ],
+      },
+    },
   },
 } as const;
 export type L1Network = Chain;
@@ -110,7 +127,7 @@ const getHyperchains = (): ZkSyncNetwork[] => {
       getTokens: () => e.tokens,
     };
     if (e.network.publicL1NetworkId) {
-      network.l1Network = PUBLIC_L1_CHAINS.find((chain) => chain.id === e.network.publicL1NetworkId);
+      network.l1Network = Object.entries(l1Networks).find(([, chain]) => chain.id === e.network.publicL1NetworkId)?.[1];
       if (!network.l1Network) {
         throw new Error(
           `L1 network with ID ${e.network.publicL1NetworkId} from ${network.name} config wasn't found in the list of public L1 networks.`
