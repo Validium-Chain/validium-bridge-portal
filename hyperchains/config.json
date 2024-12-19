@@ -17,10 +17,52 @@
         },
         "rpcUrls": {
           "default": {
-            "http": ["https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"]
+            "http": [
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
+            ]
           },
           "public": {
-            "http": ["https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"]
+            "http": [
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
+            ]
+          }
+        },
+        "blockExplorers": {
+          "default": {
+            "name": "Holesky",
+            "url": "https://holesky.etherscan.io/"
+          }
+        }
+      }
+    },
+    "tokens": []
+  },
+  {
+    "network": {
+      "id": 274,
+      "name": "Validium Nexus",
+      "key": "validium-nexus",
+      "rpcUrl": "https://devnet.explorer.validium.network:31520",
+      "blockExplorerUrl": "https://devnet.explorer.validium.network:3111",
+      "blockExplorerApi": "https://devnet.explorer.validium.network:3121",
+      "l1Network": {
+        "id": 17000,
+        "name": "Holesky",
+        "nativeCurrency": {
+          "name": "Ether",
+          "symbol": "ETH",
+          "decimals": 18
+        },
+        "rpcUrls": {
+          "default": {
+            "http": [
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
+            ]
+          },
+          "public": {
+            "http": [
+              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
+            ]
           }
         },
         "blockExplorers": {

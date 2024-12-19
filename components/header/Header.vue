@@ -38,6 +38,11 @@
       </NuxtLink>
     </div>
     <div class="right-side">
+      <NuxtLink :href="bridgeL2toL2Link" target="_blank">
+        <CommonButton variant="default" >
+          <span class="whitespace-nowrap">{{"Bridge: L2 <> L2"}}</span>
+        </CommonButton>
+      </NuxtLink>
       <HeaderNetworkDropdown class="network-dropdown" />
       <CommonButton v-if="!isConnected" variant="primary" @click="onboardStore.openModal()">
         <span class="whitespace-nowrap">Connect wallet</span>
@@ -89,6 +94,8 @@ const { withdrawalsAvailableForClaiming } = storeToRefs(useZkSyncWithdrawalsStor
 
 const mobileMainNavigationOpened = ref(false);
 const mobileAccountNavigationOpened = ref(false);
+
+const bridgeL2toL2Link = "https://hyperlane-warp-bridge.vercel.app";
 
 // const { selectedColorMode, switchColorMode } = useColorMode();
 </script>

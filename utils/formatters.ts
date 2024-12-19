@@ -124,9 +124,7 @@ export function formatError(error?: Error) {
     } else if (message.includes("missing response")) {
       return new Error("Server error. Please try again later.");
     } else if (
-      // eslint-disable-next-line prettier/prettier
       message.includes("\"finalizeEthWithdrawal\" reverted with the following reason: xx") ||
-      // eslint-disable-next-line prettier/prettier
       message.includes("\"finalizeWithdrawal\" reverted with the following reason: xx")
     ) {
       return new Error("Withdrawal is already finalized!");
