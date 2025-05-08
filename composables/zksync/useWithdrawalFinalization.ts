@@ -1,7 +1,8 @@
 import { useMemoize } from "@vueuse/core";
-import { BigNumber, type BigNumberish } from "ethers";
 import { Wallet } from "zksync-ethers";
 import IL1SharedBridge from "zksync-ethers/abi/IL1SharedBridge.json";
+
+import { useSentryLogger } from "../useSentryLogger";
 
 import type { Hash } from "@/types";
 
@@ -14,6 +15,7 @@ export default (transactionInfo: ComputedRef<TransactionInfo>) => {
   const tokensStore = useZkSyncTokensStore();
   const { isCorrectNetworkSet } = storeToRefs(onboardStore);
   const { ethToken } = storeToRefs(tokensStore);
+  const { captureException } = useSentryLogger();
 
   const retrieveBridgeAddresses = useMemoize(() => providerStore.requestProvider().getDefaultBridgeAddresses());
 
@@ -24,8 +26,8 @@ export default (transactionInfo: ComputedRef<TransactionInfo>) => {
       .then((network) => network.chainId)
   );
 
-  const gasLimit = ref<BigNumberish | undefined>();
-  const gasPrice = ref<BigNumberish | undefined>();
+  const gasLimit = ref<bigint | undefined>();
+  const gasPrice = ref<bigint | undefined>();
   const finalizeWithdrawalParams = ref<
     | {
         l1BatchNumber: unknown;
@@ -88,9 +90,9 @@ export default (transactionInfo: ComputedRef<TransactionInfo>) => {
 
       const transactionParams = await getTransactionParams();
       const [price, limit] = await Promise.all([
-        retry(async () => BigNumber.from((await publicClient.getGasPrice()).toString())),
+        retry(async () => BigInt((await publicClient.getGasPrice()).toString())),
         retry(async () => {
-          return BigNumber.from(
+          return BigInt(
             (
               await publicClient.estimateContractGas({
                 ...transactionParams,
@@ -150,6 +152,12 @@ export default (transactionInfo: ComputedRef<TransactionInfo>) => {
     } catch (err) {
       error.value = formatError(err as Error);
       status.value = "not-started";
+      captureException({
+        error: err as Error,
+        parentFunctionName: "commitTransaction",
+        parentFunctionParams: [],
+        filePath: "composables/zksync/useWithdrawalFinalization.ts",
+      });
     }
   };
 

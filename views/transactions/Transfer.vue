@@ -112,7 +112,7 @@
           <p v-if="!isCustomNode">
             After a
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank"
-              >24-hour withdrawal delay</a
+              >~5+ hour withdrawal delay</a
             >, you will need to manually claim your funds which requires paying another transaction fee on
             {{ eraNetwork.l1Network?.name }}. Alternatively you can use
             <a
@@ -150,11 +150,11 @@
           class="mb-block-padding-1/2 sm:mb-block-gap"
         >
           <p v-if="withdrawalManualFinalizationRequired">
-            You will be able to claim your withdrawal only after a 24-hour withdrawal delay.
+            You will be able to claim your withdrawal only after a 5+ hour withdrawal delay.
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">Learn more</a>
           </p>
           <p v-else>
-            You will receive funds only after a 24-hour withdrawal delay.
+            You will receive funds only after a 5+ hour withdrawal delay.
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">Learn more</a>
           </p>
         </CommonAlert>
@@ -211,7 +211,7 @@
             target="_blank"
             class="ml-auto text-right"
           >
-            Up to 24 hours
+            5+ hours
           </CommonButtonLabel>
           <CommonButtonLabel v-else-if="type === 'transfer'" as="span" class="ml-auto text-right">
             Almost instant
@@ -245,7 +245,7 @@
                   <CommonAlert variant="error" :icon="ExclamationTriangleIcon">
                     <p>
                       {{
-                        selectedToken?.address === L2_BASE_TOKEN_ADDRESS
+                        selectedToken?.address.toUpperCase() === L2_BASE_TOKEN_ADDRESS.toUpperCase()
                           ? "The fee has changed since the last estimation. "
                           : ""
                       }}Insufficient <span class="font-medium">{{ selectedToken?.symbol }}</span> balance to pay for
@@ -281,9 +281,9 @@
 <script lang="ts" setup>
 import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, InformationCircleIcon } from "@heroicons/vue/24/outline";
 import { useRouteQuery } from "@vueuse/router";
-import { BigNumber } from "ethers";
-import { isAddress } from "ethers/lib/utils";
+import { isAddress } from "ethers";
 
+import { useSentryLogger } from "@/composables/useSentryLogger";
 import useFee from "@/composables/zksync/useFee";
 import useTransaction, { isWithdrawalManualFinalizationRequired } from "@/composables/zksync/useTransaction";
 import { customBridgeTokens } from "@/data/customBridgeTokens";
@@ -314,6 +314,8 @@ const { eraNetwork } = storeToRefs(providerStore);
 const { destinations } = storeToRefs(useDestinationsStore());
 const { tokens, tokensRequestInProgress, tokensRequestError } = storeToRefs(tokensStore);
 const { balance, balanceInProgress, balanceError } = storeToRefs(walletStore);
+
+const { captureException } = useSentryLogger();
 
 const toNetworkModalOpened = ref(false);
 const toNetworkSelected = (networkKey?: string) => {
@@ -352,7 +354,10 @@ const routeTokenAddress = computed(() => {
   return checksumAddress(route.query.token);
 });
 const defaultToken = computed(
-  () => availableTokens.value.find((e) => e.address === L2_BASE_TOKEN_ADDRESS) ?? availableTokens.value[0] ?? undefined
+  () =>
+    availableTokens.value.find((e) => e.address.toUpperCase() === L2_BASE_TOKEN_ADDRESS.toUpperCase()) ??
+    availableTokens.value[0] ??
+    undefined
 );
 const selectedTokenAddress = ref<string | undefined>(routeTokenAddress.value ?? defaultToken.value?.address);
 const selectedToken = computed<Token | undefined>(() => {
@@ -428,37 +433,42 @@ const maxAmount = computed(() => {
     return undefined;
   }
   if (feeToken.value?.address === selectedToken.value.address) {
-    if (BigNumber.from(tokenBalance.value).isZero()) {
+    if (BigInt(tokenBalance.value) === 0n) {
       return "0";
     }
     if (!fee.value) {
       return undefined;
     }
-    if (BigNumber.from(fee.value).gt(tokenBalance.value)) {
+    if (BigInt(fee.value) > BigInt(tokenBalance.value)) {
       return "0";
     }
-    return BigNumber.from(tokenBalance.value).sub(fee.value).toString();
+    return String(BigInt(tokenBalance.value) - BigInt(fee.value));
   }
   return tokenBalance.value.toString();
 });
 const totalComputeAmount = computed(() => {
   try {
     if (!amount.value || !selectedToken.value) {
-      return BigNumber.from("0");
+      return 0n;
     }
     return decimalToBigNumber(amount.value, selectedToken.value.decimals);
   } catch (error) {
-    return BigNumber.from("0");
+    captureException({
+      error: error as Error,
+      parentFunctionName: "totalComputeAmount",
+      parentFunctionParams: [],
+      filePath: "views/transactions/Transfer.vue",
+    });
+    return 0n;
   }
 });
 const enoughBalanceForTransaction = computed(() => {
   if (!fee.value || !selectedToken.value || !tokenBalance.value) {
     return true;
   }
-  const totalToPay = totalComputeAmount.value.add(
-    selectedToken.value.address === feeToken.value?.address ? fee.value : "0"
-  );
-  return BigNumber.from(tokenBalance.value).gte(totalToPay);
+  const totalToPay =
+    totalComputeAmount.value + (selectedToken.value.address === feeToken.value?.address ? BigInt(fee.value) : 0n);
+  return BigInt(tokenBalance.value) >= totalToPay;
 });
 
 const transaction = computed<
@@ -550,7 +560,7 @@ const continueButtonDisabled = computed(() => {
     !enoughBalanceToCoverFee.value ||
     !enoughBalanceForTransaction.value ||
     !!amountError.value ||
-    BigNumber.from(transaction.value.token.amount).isZero()
+    BigInt(transaction.value.token.amount) === 0n
   ) {
     return true;
   }
@@ -613,7 +623,7 @@ const makeTransaction = async () => {
   }
 
   if (tx) {
-    const fee = calculateFee(gasLimit.value!, gasPrice.value!);
+    const fee = calculateFee(BigInt(gasLimit.value!), BigInt(gasPrice.value!));
     walletStore.deductBalance(feeToken.value!.address, fee);
     walletStore.deductBalance(transaction.value!.token.address, transaction.value!.token.amount);
     transactionInfo.value = {

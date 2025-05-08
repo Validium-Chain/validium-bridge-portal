@@ -1,4 +1,6 @@
 import { type Config as HyperchainsConfig } from "@/scripts/hyperchains/common";
+import type { BigNumberish } from "ethers";
+import type { Address } from "zksync-ethers/build/types";
 
 export type Hash = `0x${string}`;
 
@@ -14,6 +16,8 @@ export type Token = {
   isETH?: boolean;
 };
 export type TokenAmount = Token & { amount: BigNumberish };
+
+export type TokenAllowance = { token: Address; allowance: bigint };
 
 export declare namespace Api {
   namespace Response {
@@ -138,6 +142,8 @@ declare global {
       nodeType?: string;
       walletConnectProjectId?: string;
       ankrToken?: string;
+      sentryDSN?: string;
+      sentryENV?: string;
       screeningApiUrl?: string;
       analytics?: {
         rudder?: {
@@ -146,6 +152,8 @@ declare global {
         };
       };
       hyperchainsConfig?: HyperchainsConfig;
+      gitCommitHash?: string;
+      gitRepoUrl?: string;
     };
   }
 }

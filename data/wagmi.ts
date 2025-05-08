@@ -1,5 +1,5 @@
 import { fallback, http } from "@wagmi/core";
-import { zkSync, type Chain, zkSyncSepoliaTestnet, zkSyncTestnet } from "@wagmi/core/chains";
+import { type Chain, zksync, zksyncSepoliaTestnet } from "@wagmi/core/chains";
 import { defaultWagmiConfig } from "@web3modal/wagmi";
 
 import { chainList, type ZkSyncNetwork } from "@/data/networks";
@@ -7,8 +7,8 @@ import { chainList, type ZkSyncNetwork } from "@/data/networks";
 const portalRuntimeConfig = usePortalRuntimeConfig();
 
 const metadata = {
-  name: "zkSync Portal",
-  description: "zkSync Portal - view balances, transfer and bridge tokens",
+  name: "ZKsync Portal",
+  description: "ZKsync Portal - view balances, transfer and bridge tokens",
   url: "https://portal.zksync.io",
   icons: ["https://portal.zksync.io/icon.png"],
 };
@@ -18,7 +18,7 @@ if (!portalRuntimeConfig.walletConnectProjectId) {
 }
 
 const useExistingEraChain = (network: ZkSyncNetwork) => {
-  const existingNetworks = [zkSync, zkSyncSepoliaTestnet, zkSyncTestnet];
+  const existingNetworks = [zksync, zksyncSepoliaTestnet];
   return existingNetworks.find((existingNetwork) => existingNetwork.id === network.id);
 };
 const formatZkSyncChain = (network: ZkSyncNetwork) => {
