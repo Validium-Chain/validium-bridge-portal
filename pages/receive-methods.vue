@@ -31,7 +31,7 @@
           description="Receive testnet funds"
           icon-url="/img/faucet.svg"
           as="a"
-          href="https://docs.zksync.io/build/tooling/network-faucets.html"
+          href="https://testnet.faucet.validium.network"
           target="_blank"
           :icon="ArrowTopRightOnSquareIcon"
         />
