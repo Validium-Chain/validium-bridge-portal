@@ -1,78 +1,22 @@
 [
-  {
-    "network": {
-      "id": 273,
-      "name": "Validium",
-      "key": "validium",
-      "rpcUrl": "https://devnet.l2.rpc.validium.network/",
-      "blockExplorerUrl": "https://devnet.explorer.validium.network",
-      "blockExplorerApi": "https://devnet.api.validium.network",
-      "l1Network": {
-        "id": 17000,
-        "name": "Holesky",
-        "nativeCurrency": {
-          "name": "Ether",
-          "symbol": "ETH",
-          "decimals": 18
+    {
+        "network": {
+            "id": 567,
+            "name": "Validium Testnet",
+            "key": "validium-testnet",
+            "rpcUrl": "https://testnet.l2.rpc.validium.network",
+            "blockExplorerUrl": "https://testnet.explorer.validium.network",
+            "blockExplorerApi": "https://testnet.api.validium.network",
+            "publicL1NetworkId": 11155111
         },
-        "rpcUrls": {
-          "default": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
-          },
-          "public": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
-          }
-        },
-        "blockExplorers": {
-          "default": {
-            "name": "Holesky",
-            "url": "https://holesky.etherscan.io/"
-          }
-        }
-      }
-    },
-    "tokens": []
-  },
-  {
-    "network": {
-      "id": 274,
-      "name": "Validium Nexus",
-      "key": "validium-nexus",
-      "rpcUrl": "https://devnet.explorer.validium.network:31520",
-      "blockExplorerUrl": "https://devnet.explorer.validium.network:3111",
-      "blockExplorerApi": "https://devnet.explorer.validium.network:3121",
-      "l1Network": {
-        "id": 17000,
-        "name": "Holesky",
-        "nativeCurrency": {
-          "name": "Ether",
-          "symbol": "ETH",
-          "decimals": 18
-        },
-        "rpcUrls": {
-          "default": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
-          },
-          "public": {
-            "http": [
-              "https://holesky.infura.io/v3/f4dcf59fef5d48f6b9e4ba3f0f52b2a7"
-            ]
-          }
-        },
-        "blockExplorers": {
-          "default": {
-            "name": "Holesky",
-            "url": "https://holesky.etherscan.io/"
-          }
-        }
-      }
-    },
-    "tokens": []
-  }
+        "tokens": [
+            {
+                "address": "0x8Cf5f629Bb26FC3F92144e72bC4A3719A7DF07F3",
+                "l1Address": "0x1c7d4b196cb0c7b01d743fbc6116a902379c7238",
+                "symbol": "USDC",
+                "decimals": 6,
+                "iconUrl": "/img/eth.svg"
+            }
+        ]
+    }
 ]
