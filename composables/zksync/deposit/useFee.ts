@@ -56,7 +56,7 @@ export default (tokens: Ref<Token[]>, balances: Ref<TokenAmount[] | undefined>) 
   });
 
   const getEthTransactionFee = async () => {
-    const signer = getL1VoidSigner();
+    const signer = await getL1VoidSigner();
     if (!signer) throw new Error("Signer is not available");
 
     return await retry(() =>
@@ -72,7 +72,7 @@ export default (tokens: Ref<Token[]>, balances: Ref<TokenAmount[] | undefined>) 
     };
   };
   const getGasPrice = async () => {
-    return (BigInt(await retry(() => getPublicClient().getGasPrice())) * 110n) / 100n;
+    return (BigInt(await retry(() => getPublicClient().getGasPrice())) * 130n) / 100n;
   };
   const {
     inProgress,
@@ -84,7 +84,7 @@ export default (tokens: Ref<Token[]>, balances: Ref<TokenAmount[] | undefined>) 
       recommendedBalance.value = undefined;
       if (!feeToken.value) throw new Error("Fee tokens is not available");
 
-      const provider = requestProvider();
+      const provider = await requestProvider();
       const isEthBasedChain = await provider.isEthBasedChain();
 
       try {
@@ -116,6 +116,20 @@ export default (tokens: Ref<Token[]>, balances: Ref<TokenAmount[] | undefined>) 
       /* It can be either maxFeePerGas or gasPrice */
       if (fee.value && !fee.value?.maxFeePerGas) {
         fee.value.gasPrice = await getGasPrice();
+      } else if (fee.value?.maxFeePerGas) {
+        // Apply 130% buffer to EIP-1559 parameters
+        fee.value.maxFeePerGas = (fee.value.maxFeePerGas * 130n) / 100n;
+        if (fee.value.maxPriorityFeePerGas) {
+          fee.value.maxPriorityFeePerGas = (fee.value.maxPriorityFeePerGas * 130n) / 100n;
+        }
+        if (fee.value.l1GasLimit) {
+          fee.value.l1GasLimit = (fee.value.l1GasLimit * 130n) / 100n;
+        }
+      }
+
+      // Apply 130% buffer to baseCost to prevent MsgValueTooLow errors
+      if (fee.value?.baseCost) {
+        fee.value.baseCost = (fee.value.baseCost * 130n) / 100n;
       }
     },
     { cache: false }

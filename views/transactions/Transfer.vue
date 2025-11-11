@@ -53,6 +53,7 @@
           :tokens="availableTokens"
           :balances="availableBalances"
           :max-amount="maxAmount"
+          :approve-required="!!isNativeToken && !amountToTransferIsApproved"
           :loading="tokensRequestInProgress || balanceInProgress || feeLoading"
         >
           <template v-if="type === 'withdrawal' && account.address" #token-dropdown-bottom>
@@ -106,39 +107,28 @@
           class="mt-6"
           :custom-bridge-token="tokenCustomBridge"
         />
+        <TransactionNativeBridge
+          v-if="nativeTokenBridgingOnly"
+          :era-network="eraNetwork"
+          type="withdraw"
+          class="mt-6"
+        ></TransactionNativeBridge>
       </template>
       <template v-else-if="step === 'withdrawal-finalization-warning'">
         <CommonAlert variant="warning" :icon="ExclamationTriangleIcon" class="mb-block-padding-1/2 sm:mb-block-gap">
           <p v-if="!isCustomNode">
-            After a
+            After an approximately
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank"
               >~5+ hour withdrawal delay</a
-            >, you will need to manually claim your funds which requires paying another transaction fee on
-            {{ eraNetwork.l1Network?.name }}. Alternatively you can use
-            <a
-              href="https://zksync.dappradar.com/ecosystem?category=defi_bridge"
-              target="_blank"
-              class="underline underline-offset-2"
-              >third-party bridges</a
-            >.
+            >, return to this portal to claim your funds on Ethereum. Claiming will require paying Ethereum transaction
+            fees. You may also choose to use a third-party bridge to withdraw funds, at your own risk.
           </p>
           <p v-else>
-            After transaction is executed on {{ eraNetwork.l1Network?.name }}, you will need to manually claim your
-            funds which requires paying another transaction fee on {{ eraNetwork.l1Network?.name }}.
+            After transaction is executed on {{ eraNetwork.l1Network?.name }}, you will need to claim your funds which
+            requires paying another transaction fee on {{ eraNetwork.l1Network?.name }}.
           </p>
         </CommonAlert>
-        <CommonButton
-          as="a"
-          href="https://zksync.dappradar.com/ecosystem?category=defi_bridge"
-          target="_blank"
-          type="submit"
-          variant="primary"
-          class="mt-block-gap w-full gap-1"
-        >
-          See third-party bridges
-          <ArrowTopRightOnSquareIcon class="h-6 w-6" aria-hidden="true" />
-        </CommonButton>
-        <CommonButton size="sm" class="mx-auto mt-block-gap w-max" @click="buttonContinue()">
+        <CommonButton variant="primary" class="mx-auto mt-block-gap w-max" @click="buttonContinue()">
           I understand, proceed to withdrawal
         </CommonButton>
       </template>
@@ -150,11 +140,11 @@
           class="mb-block-padding-1/2 sm:mb-block-gap"
         >
           <p v-if="withdrawalManualFinalizationRequired">
-            You will be able to claim your withdrawal only after a 5+ hour withdrawal delay.
+            You will be able to claim your withdrawal after an approximate 5+ hour withdrawal delay.
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">Learn more</a>
           </p>
           <p v-else>
-            You will receive funds only after a 5+ hour withdrawal delay.
+            You will receive funds after an approximate 5+ hour withdrawal delay.
             <a class="underline underline-offset-2" :href="ZKSYNC_WITHDRAWAL_DELAY" target="_blank">Learn more</a>
           </p>
         </CommonAlert>
@@ -190,7 +180,7 @@
         />
       </template>
 
-      <template v-if="!tokenCustomBridge && (step === 'form' || step === 'confirm')">
+      <template v-if="!nativeTokenBridgingOnly && !tokenCustomBridge && (step === 'form' || step === 'confirm')">
         <CommonErrorBlock v-if="feeError" class="mt-2" @try-again="estimate">
           Fee estimation error: {{ feeError.message }}
         </CommonErrorBlock>
@@ -211,7 +201,7 @@
             target="_blank"
             class="ml-auto text-right"
           >
-            5+ hours
+            6+ hours
           </CommonButtonLabel>
           <CommonButtonLabel v-else-if="type === 'transfer'" as="span" class="ml-auto text-right">
             Almost instant
@@ -226,19 +216,62 @@
             <NuxtLink :to="{ name: 'receive-methods' }" class="alert-link">Receive funds</NuxtLink>
           </CommonAlert>
         </transition>
+        <CommonHeightTransition
+          v-if="step === 'form'"
+          :opened="
+            !!isNativeToken &&
+            (showAllowanceProcess || !amountToTransferIsApproved || setAllowanceTransactionHashes.length > 0)
+          "
+        >
+          <AllowancePanel
+            v-if="selectedToken && approvedAllowance != null"
+            :selected-token="selectedToken"
+            :token-address="selectedTokenAddress!"
+            :asset-id="assetId!"
+            :enough-allowance="amountToTransferIsApproved"
+            :block-explorer-url="eraNetwork.blockExplorerUrl"
+            :allowance="approvedAllowance"
+            :set-allowance-receipts="approveAllowanceReceipt"
+            :set-allowance-transaction-hashes="setAllowanceTransactionHashes"
+            @set-amount="handleSetAmount"
+          />
+        </CommonHeightTransition>
 
         <TransactionFooter>
           <template #after-checks>
-            <CommonButton
-              v-if="step === 'form'"
-              type="submit"
-              :disabled="continueButtonDisabled"
-              variant="primary"
-              class="w-full"
-              @click="buttonContinue()"
-            >
-              Continue
-            </CommonButton>
+            <template v-if="step === 'form'">
+              <template v-if="showAllowanceProcess">
+                <CommonButton
+                  type="submit"
+                  variant="primary"
+                  class="w-full"
+                  :disabled="setAllowanceStatus !== 'not-started' || approveAllowanceInProgress"
+                  @click="setTokenAllowance()"
+                >
+                  <transition v-bind="TransitionPrimaryButtonText" mode="out-in">
+                    <span v-if="setAllowanceStatus === 'processing'">Processing...</span>
+                    <span v-else-if="setAllowanceStatus === 'waiting-for-signature'"
+                      >Waiting for allowance approval confirmation</span
+                    >
+                    <span v-else-if="setAllowanceStatus === 'sending'" class="flex items-center">
+                      <CommonSpinner class="mr-2 h-6 w-6" />
+                      Approving allowance...
+                    </span>
+                    <span v-else>Approve {{ selectedToken?.symbol }} allowance</span>
+                  </transition>
+                </CommonButton>
+              </template>
+              <CommonButton
+                v-else
+                type="submit"
+                :disabled="continueButtonDisabled"
+                variant="primary"
+                class="w-full"
+                @click="buttonContinue()"
+              >
+                Continue
+              </CommonButton>
+            </template>
             <template v-else-if="step === 'confirm'">
               <transition v-bind="TransitionAlertScaleInOutTransition">
                 <div v-if="!enoughBalanceForTransaction" class="mb-4">
@@ -279,10 +312,12 @@
 </template>
 
 <script lang="ts" setup>
-import { ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, InformationCircleIcon } from "@heroicons/vue/24/outline";
+import { ExclamationTriangleIcon, InformationCircleIcon } from "@heroicons/vue/24/outline";
 import { useRouteQuery } from "@vueuse/router";
 import { isAddress } from "ethers";
 
+import AllowancePanel from "@/components/transaction/AllowancePanel.vue";
+import { useNativeAllowance } from "@/composables/transaction/useNativeAllowance";
 import { useSentryLogger } from "@/composables/useSentryLogger";
 import useFee from "@/composables/zksync/useFee";
 import useTransaction, { isWithdrawalManualFinalizationRequired } from "@/composables/zksync/useTransaction";
@@ -370,6 +405,7 @@ const selectedToken = computed<Token | undefined>(() => {
         defaultToken.value
     : defaultToken.value;
 });
+
 const tokenCustomBridge = computed(() => {
   if (props.type !== "withdrawal" && selectedToken.value) {
     return undefined;
@@ -430,6 +466,12 @@ const isAddressInputValid = computed(() => {
 watch(address, (_address) => {
   queryAddress.value = !_address.length ? undefined : _address;
 });
+
+const handleSetAmount = (allowanceAmount: bigint) => {
+  if (selectedToken.value) {
+    amount.value = parseTokenAmount(allowanceAmount, selectedToken.value.decimals);
+  }
+};
 
 const amount = ref("");
 const amountError = ref<string | undefined>();
@@ -514,8 +556,35 @@ const withdrawalManualFinalizationRequired = computed(() => {
   );
 });
 
+const {
+  isNativeToken,
+  assetId,
+  allowanceCheckInProgress,
+  amountToTransferIsApproved,
+  approvedAllowance,
+  executeApproveAllowance,
+  setAllowanceTransactionHashes,
+  approveAllowanceReceipt,
+  setAllowanceStatus,
+  showAllowanceProcess,
+  approveAllowanceInProgress,
+} = useNativeAllowance(selectedTokenAddress, totalComputeAmount);
+
+const setTokenAllowance = async () => {
+  await executeApproveAllowance();
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait for balances to be updated on API side
+  await fetchBalances(true);
+};
+
 const feeLoading = computed(() => feeInProgress.value || (!fee.value && balanceInProgress.value));
 const estimate = async () => {
+  if (allowanceCheckInProgress.value) {
+    return;
+  }
+  if (isNativeToken.value && !amountToTransferIsApproved.value) {
+    return;
+  }
+
   // estimation fails when token balance is 0
   if (
     !transaction.value?.from.address ||
@@ -525,15 +594,24 @@ const estimate = async () => {
   ) {
     return;
   }
+
   await estimateFee({
     type: props.type,
     from: transaction.value.from.address,
     to: transaction.value.to.address,
     tokenAddress: selectedToken.value.address,
+    isNativeToken: isNativeToken.value,
+    assetId: assetId.value,
+    amount: totalComputeAmount.value.toString(),
   });
 };
 watch(
-  [() => selectedToken.value?.address, () => tokenBalance.value?.toString()],
+  [
+    () => selectedToken.value?.address,
+    () => tokenBalance.value?.toString(),
+    amountToTransferIsApproved,
+    totalComputeAmount,
+  ],
   () => {
     resetFee();
     estimate();
@@ -558,6 +636,18 @@ watch(
   { immediate: true }
 );
 
+const nativeTokenBridgingOnly = computed(() => {
+  if (
+    eraNetwork.value.nativeTokenBridgingOnly &&
+    eraNetwork.value.nativeCurrency &&
+    selectedToken.value &&
+    selectedToken.value.symbol !== eraNetwork.value.nativeCurrency.symbol
+  ) {
+    return true;
+  }
+  return false;
+});
+
 const continueButtonDisabled = computed(() => {
   if (
     !isAddressInputValid.value ||
@@ -570,6 +660,10 @@ const continueButtonDisabled = computed(() => {
     return true;
   }
   if (feeLoading.value || !fee.value) return true;
+  if (allowanceCheckInProgress.value) return true;
+  if (isNativeToken.value && !amountToTransferIsApproved.value) {
+    return true;
+  }
   return false;
 });
 const buttonContinue = () => {
@@ -704,5 +798,3 @@ onBeforeUnmount(() => {
   unsubscribeFetchBalance();
 });
 </script>
-
-<style lang="scss" scoped></style>

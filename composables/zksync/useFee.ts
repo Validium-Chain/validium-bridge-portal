@@ -1,4 +1,9 @@
+import { estimateGas } from "@wagmi/core";
+import { AbiCoder } from "ethers";
+import { encodeFunctionData } from "viem";
 import { EIP712_TX_TYPE } from "zksync-ethers/build/utils";
+
+import { wagmiConfig } from "@/data/wagmi";
 
 import type { Token, TokenAmount } from "@/types";
 import type { BigNumberish, ethers } from "ethers";
@@ -10,11 +15,14 @@ export type FeeEstimationParams = {
   from: string;
   to: string;
   tokenAddress: string;
+  isNativeToken: boolean | null;
+  assetId?: string | null;
+  amount: string;
 };
 
 export default (
   userAddress: ComputedRef<Address | undefined>,
-  getProvider: () => Provider,
+  getProvider: () => Promise<Provider>,
   tokens: Ref<{ [tokenSymbol: string]: Token } | undefined>,
   balances: Ref<TokenAmount[]>
 ) => {
@@ -62,7 +70,7 @@ export default (
     tx.overrides.from ??= tx.from;
     tx.overrides.type ??= EIP712_TX_TYPE;
 
-    const provider = getProvider();
+    const provider = await getProvider();
     const bridge = await provider.connectL2Bridge(tx.bridgeAddress!);
     let populatedTx = await bridge.withdraw.populateTransaction(tx.to!, tx.token, tx.amount, tx.overrides);
     if (tx.paymasterParams) {
@@ -98,7 +106,7 @@ export default (
         return;
       }
 
-      const provider = getProvider();
+      const provider = await getProvider();
       const token = balances.value.find((e) => e.address === params!.tokenAddress);
       if (!token || token.amount === "0") {
         resetFee();
@@ -107,6 +115,11 @@ export default (
 
       const tokenBalance = await provider.getBalance(userAddress.value, "latest", token.address); // Makes sure we have the latest balance amount
       if (!tokenBalance) {
+        resetFee();
+        return;
+      }
+
+      if (params.isNativeToken && +params!.amount <= 0) {
         resetFee();
         return;
       }
@@ -122,6 +135,33 @@ export default (
               token: params!.tokenAddress,
               amount: tokenBalance,
               bridgeAddress: token?.l2BridgeAddress,
+            });
+          } else if (params!.isNativeToken && params!.assetId) {
+            const assetData = AbiCoder.defaultAbiCoder().encode(
+              ["uint256", "address", "address"],
+              [params!.amount, params!.to, params!.tokenAddress]
+            );
+
+            // Define the specific withdraw function as there are two
+            // defined on the Asset Router Contract
+            const withdrawFunction = {
+              inputs: [
+                { internalType: "bytes32", name: "_assetId", type: "bytes32" },
+                { internalType: "bytes", name: "_assetData", type: "bytes" },
+              ],
+              name: "withdraw",
+              outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+              stateMutability: "nonpayable",
+              type: "function",
+            };
+
+            return estimateGas(wagmiConfig, {
+              to: L2_ASSET_ROUTER_ADDRESS,
+              data: encodeFunctionData({
+                abi: [withdrawFunction],
+                functionName: "withdraw",
+                args: [params!.assetId, assetData],
+              }),
             });
           } else {
             return provider[params!.type === "transfer" ? "estimateGasTransfer" : "estimateGasWithdraw"]({
